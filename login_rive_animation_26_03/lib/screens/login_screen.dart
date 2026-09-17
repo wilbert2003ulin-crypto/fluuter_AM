@@ -19,6 +19,33 @@ class _LoginScreenState extends State<LoginScreen> {
   SMITrigger? _trigSuccess;
   SMITrigger? _trigFail;
 
+  //1.1 crear variables para focusNode
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+
+  //1.2 crear los listeners (Oyentes/Chismosos)
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener( () {
+      if (_emailFocusNode.hasFocus) {
+        //verificar que no sea nulo
+        if (_isHandsUp != null) {
+          //Manos arriba en el email
+          _isHandsUp!.change(false);
+        }
+      }
+    } )  ;
+    _passwordFocusNode.addListener( () {
+      //Manos arriba en password
+      _isHandsUp?.change (_passwordFocusNode.hasFocus) ; 
+        
+      
+    } )  ;
+    
+  }
+
   @override
   Widget build(BuildContext context) {
     // Para obtener el tamaño de la pantalla
@@ -63,10 +90,12 @@ class _LoginScreenState extends State<LoginScreen> {
               
               // Campo de texto para el email
               TextField(
+                //1.3 Asignamos el focusNode al campo de email
+                focusNode: _emailFocusNode, // Asignamos el focusNode al campo de email,
                 onChanged: (value) {
                   if (_isHandsUp != null) {
                     //No se tapa los ojos
-                    _isHandsUp!.change(false);
+                    //_isHandsUp!.change(false);
                   }
                   //Si ischecking es nulo
                   if (_isChecking != null) return; {
@@ -91,15 +120,17 @@ class _LoginScreenState extends State<LoginScreen> {
               
               // Campo de texto para la contraseña
               TextField(
+                //1.3 Asignamos el focusNode al campo de email
+                focusNode: _passwordFocusNode, // Asignamos el focusNode al campo de email,
                 onChanged: (value) {
-                  if (_isHandsUp != null) {
+                  if (_isChecking != null) {
                     //No se tapa los ojos
-                    _isHandsUp!.change(true);
+                    //_isChecking!.change(false);
                   }
                   //Si ischecking es nulo
-                  if (_isChecking != null) return; {
+                  if (_isHandsUp != null) return; {
                     //Activar el modo chismoso
-                    _isChecking!.change(false);
+                    _isHandsUp!.change(true);
 
                   }
                 },
@@ -128,4 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  @override
+
+  void dispose() {
+    //1.4 Liberar los focusNodes cuando el widget se elimine del árbol de widgets
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
+
 }
