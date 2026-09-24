@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
-import 'dart:async'; //3.1 importar el timer
+import 'dart:async'; // 3.1 importar el timer
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,122 +20,160 @@ class _LoginScreenState extends State<LoginScreen> {
   SMITrigger? _trigSuccess;
   SMITrigger? _trigFail;
 
-  //2.1 Variable para controlar el recorrido de la mirada del oso
-
+  // 2.1 Variable para controlar el recorrido de la mirada del oso
   SMINumber? _numLook;
 
-  //3.2 Timer para detener la mirada al dejar de escribir
+  // 3.2 Timer para detener la mirada al dejar de escribir
   Timer? _typingDebounce;
 
-  //1.1 crear variables para focusNode
+  // 1.1 crear variables para focusNode
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  //1.2 crear los listeners (Oyentes/Chismosos)
+  // 4.1 controllers para manipular el texto escrito por usuario
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
+  // 4.2 Errores para mostrar en la UI
+  String? emailError;
+  String? passwordError;
+
+  // 4.3 Validadores para email y password
+  bool validateEmail(String email) {
+    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return re.hasMatch(email);
+  }
+  
+  bool validatePassword(String pass) {
+    // minimo de 8, una mayuscula, una minuscula, un numero y un caracter especial
+    final re = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$');
+    return re.hasMatch(pass);
+  }
+
+  // 4.4 Accion del boton de login
+  void _onLogin(){
+    // De lo que escribio el usuario, quita espacios en blanco
+    final email = emailController.text.trim();
+    final pass = passwordController.text;
+
+    // Recalcular los errores (Corregido para que devuelva null si es válido)
+    final eError = validateEmail(email) ? null : 'Invalid email';
+    final pError = validatePassword(pass) ? null : 'Invalid password';
+
+    // 4.5 Avisar si hubo un error
+    setState(() {
+      emailError = eError;
+      passwordError = pError;
+    });
+
+    // 4.6 cerrar el teclado y bajar las manos del oso
+    FocusScope.of(context).unfocus();
+    _typingDebounce?.cancel();
+    _isChecking?.change(false);
+    _isHandsUp?.change(false);
+    _numLook?.value = 50; // Mirada neutral
+
+    // 4.7 Activar triggers
+    if(eError == null && pError == null){
+      _trigSuccess?.fire();
+    } else {
+      _trigFail?.fire();
+    }
+  }
+
+  // 1.2 crear los listener
   @override
   void initState() {
     super.initState();
-    _emailFocusNode.addListener( () {
+    _emailFocusNode.addListener(() {
       if (_emailFocusNode.hasFocus) {
-        //verificar que no sea nulo
+        // Verificar que no sea nulo
         if (_isHandsUp != null) {
-          //Manos arriba en el email
+          // Manos abajo en el email
           _isHandsUp!.change(false);
-          //2.2 Mirada Neutral
+          // 2.2 Mirada Neutral
           _numLook?.value = 50;
         }
       }
-    } )  ;
-    _passwordFocusNode.addListener( () {
-      //Manos arriba en password
-      _isHandsUp?.change (_passwordFocusNode.hasFocus) ; 
-        
-      
-    } )  ;
-    
+    });
+
+    _passwordFocusNode.addListener(() {
+      // Manos arriba en password
+      _isHandsUp?.change(_passwordFocusNode.hasFocus);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     // Para obtener el tamaño de la pantalla
     final Size size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
+              const SizedBox(height: 40), // Espacio superior opcional
               SizedBox(
                 height: 200,
                 width: size.width,
                 child: RiveAnimation.asset(
-                  'login_bear.riv', // Asegúrate de incluir la ruta de assets/
+                  'assets/login_bear.riv',
                   stateMachines: const ['Login Machine'],
                   onInit: (artboard) {
-                    //  Inicializamos el controlador correctamente
+                    // Inicializamos el controlador correctamente
                     _controller = StateMachineController.fromArtboard(
-                      artboard, 
+                      artboard,
                       'Login Machine',
                     );
 
-                    //  Si no se pudo crear, nos salimos para evitar errores
+                    // Si no se pudo crear, nos salimos para evitar errores
                     if (_controller == null) return;
 
-                    //  Agregamos el controlador al artboard
+                    // Agregamos el controlador al artboard
                     artboard.addController(_controller!);
 
-                    //  Vinculamos las variables usando findInput
+                    // Vinculamos las variables usando findInput
                     _isChecking = _controller?.findSMI('isChecking');
                     _isHandsUp = _controller?.findSMI('isHandsUp');
                     _trigSuccess = _controller?.findSMI('trigSuccess');
                     _trigFail = _controller?.findSMI('trigFail');
-                    //2.3 Vinculamos la variable de mirada numLook
+                    
+                    // 2.3 Vinculamos la variable de mirada numLook
                     _numLook = _controller?.findSMI('numLook');
                   },
                 ),
               ),
-              
+
               // Para separar widgets
               const SizedBox(height: 10),
-              
+
               // Campo de texto para el email
               TextField(
-                //1.3 Asignamos el focusNode al campo de email
-                focusNode: _emailFocusNode, // Asignamos el focusNode al campo de email,
+                focusNode: _emailFocusNode,
+                controller: emailController,
                 onChanged: (value) {
-                  if (_isHandsUp != null) {
-                    //No se tapa los ojos
-                    //_isHandsUp!.change(false);
-                  }
-                  //Si ischecking es nulo
-                  if (_isChecking == null) return; {
-                    //Activar el modo chismoso
-                    _isChecking!.change(true);
-                    //2.4 Implementar nomLook para que el oso mire el email
-                    // Ajuste de limites de 0 a 100
-                    // 80 es la medida de calibracion
-                    final look = (value.length / 50.0 * 100.0).clamp(0.0, 100.0);
-                    //clamp es el rango (abrazadera)
-                    _numLook?.value = look;
+                  if (_isChecking == null) return;
 
+                  // Activar el modo chismoso
+                  _isChecking!.change(true);
 
-                    //3.3 Debounce : si vuelve a teclear, reinicia el contador
-                    //Cancelar cualquier timer existente
-                    _typingDebounce?.cancel();
-                    //Crear un nuevo timer
-                    _typingDebounce = Timer(const Duration (seconds: 3), () {
-                      //Si se cierra la pantalla (!mounted es que no esta activa)
-                      if (!mounted) return;
-                      _isChecking?.change(false);
-                      _numLook?.value = 50; // Mirada neutral
-                    });
-                  }
+                  // 2.4 Implementar numLook para que el oso mire el email
+                  final look = (value.length / 50.0 * 100.0).clamp(0.0, 100.0);
+                  _numLook?.value = look;
+
+                  // 3.3 Debounce: si vuelve a teclear, reinicia el contador
+                  _typingDebounce?.cancel();
+                  _typingDebounce = Timer(const Duration(seconds: 3), () {
+                    if (!mounted) return;
+                    _isChecking?.change(false);
+                    _numLook?.value = 50; // Mirada neutral
+                  });
                 },
-                //Para mostrar el tipo de teclado adecuado para el email
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
+                  errorText: emailError,
                   hintText: 'Email',
                   prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(
@@ -143,28 +181,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              
+
               // Para separar widgets
               const SizedBox(height: 10),
-              
+
               // Campo de texto para la contraseña
               TextField(
-                //1.3 Asignamos el focusNode al campo de email
-                focusNode: _passwordFocusNode, // Asignamos el focusNode al campo de email,
+                focusNode: _passwordFocusNode,
+                controller: passwordController,
                 onChanged: (value) {
-                  if (_isChecking != null) {
-                    //No se tapa los ojos
-                    //_isChecking!.change(false);
-                  }
-                  //Si ischecking es nulo
-                  if (_isHandsUp != null) return; {
-                    //Activar el modo chismoso
+                  if (_isHandsUp != null) {
                     _isHandsUp!.change(true);
-
                   }
                 },
-                obscureText: _obscureText, // Oculta los caracteres para la contraseña
+                obscureText: _obscureText,
                 decoration: InputDecoration(
+                  errorText: passwordError,
                   hintText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -182,6 +214,56 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+
+              // Texto olvide mi contraseña
+              const SizedBox(height: 10),
+              SizedBox(
+                width: size.width,
+                child: const Text(
+                  'Forgot Password?',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
+              
+              const SizedBox(height: 10),
+              MaterialButton(
+                minWidth: size.width,
+                height: 50, 
+                color: const Color(0xFFC21235),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),  
+                onPressed: _onLogin,
+                child: const Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              
+              // Sección de registro corregida (estructura de llaves y widgets)
+              SizedBox(
+                width: size.width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account? "),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        "Register",
+                        style: TextStyle(
+                          color: Colors.black,
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -190,15 +272,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
-
   void dispose() {
-    //1.4 Liberar los focusNodes cuando el widget se elimine del árbol de widgets, liberar memoria o recursos
+    // 1.4 Liberar los focusNodes y recursos al salir de la pantalla
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
-    //3.4 Liberar el timer
     _typingDebounce?.cancel();
+    // 4.11 Liberar los controllers
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
-
-
 }
