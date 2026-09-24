@@ -279,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _typingDebounce?.cancel();
     // 4.11 Liberar los controllers
     emailController.dispose();
-    passwordController.dispose();
+    passwordController.dispose(); 
     super.dispose();
   }
 }
