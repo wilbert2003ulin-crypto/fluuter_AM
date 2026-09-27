@@ -13,6 +13,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // Variable para controlar la visibilidad de la contraseña
   bool _obscureText = true;
 
+  // Variable para el remember me (Solicitud de la actividad)
+  bool _rememberMe = false;
+
+  // Bandera anti-spam para evitar múltiples clics rápidos en el botón de login
+  bool _isLoading = false;
+
   // Crear el cerebro de las animaciones
   StateMachineController? _controller;
   SMIBool? _isChecking;
@@ -50,13 +56,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return re.hasMatch(pass);
   }
 
-  // 4.4 Accion del boton de login
-  void _onLogin(){
+  // 4.4 Accion del boton de login con control anti-spam
+  void _onLogin() async {
+    // Si ya está cargando o procesando, ignoramos clics repetidos (Anti-spam)
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     // De lo que escribio el usuario, quita espacios en blanco
     final email = emailController.text.trim();
     final pass = passwordController.text;
 
-    // Recalcular los errores (Corregido para que devuelva null si es válido)
+    // Recalcular los errores
     final eError = validateEmail(email) ? null : 'Invalid email';
     final pError = validatePassword(pass) ? null : 'Invalid password';
 
@@ -79,6 +92,15 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       _trigFail?.fire();
     }
+
+    // Simulamos un pequeño retraso de animación/proceso para liberar el botón (Anti-spam)
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   // 1.2 crear los listener
@@ -87,25 +109,20 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _emailFocusNode.addListener(() {
       if (_emailFocusNode.hasFocus) {
-        // Verificar que no sea nulo
         if (_isHandsUp != null) {
-          // Manos abajo en el email
           _isHandsUp!.change(false);
-          // 2.2 Mirada Neutral
           _numLook?.value = 50;
         }
       }
     });
 
     _passwordFocusNode.addListener(() {
-      // Manos arriba en password
       _isHandsUp?.change(_passwordFocusNode.hasFocus);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Para obtener el tamaño de la pantalla
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -114,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              const SizedBox(height: 40), // Espacio superior opcional
+              const SizedBox(height: 40),
               SizedBox(
                 height: 200,
                 width: size.width,
@@ -122,31 +139,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   'assets/login_bear.riv',
                   stateMachines: const ['Login Machine'],
                   onInit: (artboard) {
-                    // Inicializamos el controlador correctamente
                     _controller = StateMachineController.fromArtboard(
                       artboard,
                       'Login Machine',
                     );
 
-                    // Si no se pudo crear, nos salimos para evitar errores
                     if (_controller == null) return;
 
-                    // Agregamos el controlador al artboard
                     artboard.addController(_controller!);
 
-                    // Vinculamos las variables usando findInput
                     _isChecking = _controller?.findSMI('isChecking');
                     _isHandsUp = _controller?.findSMI('isHandsUp');
                     _trigSuccess = _controller?.findSMI('trigSuccess');
                     _trigFail = _controller?.findSMI('trigFail');
-                    
-                    // 2.3 Vinculamos la variable de mirada numLook
                     _numLook = _controller?.findSMI('numLook');
                   },
                 ),
               ),
 
-              // Para separar widgets
               const SizedBox(height: 10),
 
               // Campo de texto para el email
@@ -155,20 +165,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: emailController,
                 onChanged: (value) {
                   if (_isChecking == null) return;
-
-                  // Activar el modo chismoso
                   _isChecking!.change(true);
 
-                  // 2.4 Implementar numLook para que el oso mire el email
                   final look = (value.length / 50.0 * 100.0).clamp(0.0, 100.0);
                   _numLook?.value = look;
 
-                  // 3.3 Debounce: si vuelve a teclear, reinicia el contador
                   _typingDebounce?.cancel();
                   _typingDebounce = Timer(const Duration(seconds: 3), () {
                     if (!mounted) return;
                     _isChecking?.change(false);
-                    _numLook?.value = 50; // Mirada neutral
+                    _numLook?.value = 50;
                   });
                 },
                 keyboardType: TextInputType.emailAddress,
@@ -182,7 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Para separar widgets
               const SizedBox(height: 10),
 
               // Campo de texto para la contraseña
@@ -215,18 +220,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Texto olvide mi contraseña
-              const SizedBox(height: 10),
-              SizedBox(
-                width: size.width,
-                child: const Text(
-                  'Forgot Password?',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(decoration: TextDecoration.underline),
-                ),
+              const SizedBox(height: 5),
+
+              // Fila de Remember me y Forgot Password (Diseño limpio y sencillo)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Checkbox de Remember me
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
+                      ),
+                      const Text('Remember me'),
+                    ],
+                  ),
+                  // Forgot Password
+                  const Text(
+                    'Forgot Password?',
+                    style: TextStyle(decoration: TextDecoration.underline),
+                  ),
+                ],
               ),
               
               const SizedBox(height: 10),
+
+              // Botón de Login condicionado con _isLoading (Anti-spam)
               MaterialButton(
                 minWidth: size.width,
                 height: 50, 
@@ -234,16 +258,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),  
-                onPressed: _onLogin,
-                child: const Text(
-                  'Login',
-                  style: TextStyle(color: Colors.white),
+                onPressed: _isLoading ? null : _onLogin, // Desactiva clics si está cargando
+                child: Text(
+                  _isLoading ? 'Loading...' : 'Login',
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
 
               const SizedBox(height: 20),
               
-              // Sección de registro corregida (estructura de llaves y widgets)
               SizedBox(
                 width: size.width,
                 child: Row(
@@ -273,13 +296,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    // 1.4 Liberar los focusNodes y recursos al salir de la pantalla
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     _typingDebounce?.cancel();
-    // 4.11 Liberar los controllers
     emailController.dispose();
-    passwordController.dispose(); 
+    passwordController.dispose();
     super.dispose();
   }
 }
