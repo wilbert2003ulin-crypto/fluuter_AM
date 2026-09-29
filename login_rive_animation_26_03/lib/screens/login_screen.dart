@@ -250,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
               
               const SizedBox(height: 10),
 
-              // Botón de Login condicionado con _isLoading (Anti-spam)
+              // Botn de Login condicionado con _isLoading (Anti-spam)
               MaterialButton(
                 minWidth: size.width,
                 height: 50, 
@@ -258,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),  
-                onPressed: _isLoading ? null : _onLogin, // Desactiva clics si está cargando
+                onPressed: _isLoading ? null : _onLogin, // Desactiva clics si esta cargando
                 child: Text(
                   _isLoading ? 'Loading...' : 'Login',
                   style: const TextStyle(color: Colors.white),
