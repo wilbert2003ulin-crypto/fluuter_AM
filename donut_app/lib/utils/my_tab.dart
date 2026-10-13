@@ -12,6 +12,27 @@ class MyTab extends StatefulWidget {
 class _MyTabState extends State<MyTab> {
   @override
   Widget build(BuildContext context) {
-    return Tab();
+    return Tab(
+      height: 80,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            //Borde circular
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Image.asset(widget.iconPath, color: Colors.grey[600]),
+              ),
+              Text(widget.iconName, style: TextStyle(fontSize: 8)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
