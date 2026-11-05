@@ -14,16 +14,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Widget> myTabs = [
-    //Donuts tab
+  final List<Widget> myTabs = [
+    // Donuts tab
     const MyTab(iconPath: 'assets/icons/donut.png', iconName: 'Donuts'),
-    //Burgers tab
+    // Burgers tab
     const MyTab(iconPath: 'assets/icons/burger.png', iconName: 'Burgers'),
-    //Smoothies tab
+    // Smoothies tab
     const MyTab(iconPath: 'assets/icons/smoothie.png', iconName: 'Smoothies'),
-    //Pancakes tab
+    // Pancakes tab
     const MyTab(iconPath: 'assets/icons/pancakes.png', iconName: 'Pancakes'),
-    //Pizzas tab
+    // Pizzas tab
     const MyTab(iconPath: 'assets/icons/pizza.png', iconName: 'Pizzas'),
   ];
 
@@ -34,9 +34,12 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          //para el icono de la izquierda
-          leading: Icon(Icons.menu, color: Colors.grey),
-          //icono de la derecha
+          // Para el icono de la izquierda
+          leading: const Padding(
+            padding: EdgeInsets.only(left: 24.0),
+            child: Icon(Icons.menu, color: Colors.grey),
+          ),
+          // Icono de la derecha
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 24.0),
@@ -45,35 +48,35 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         body: Column(
-          //1. Texto principal
           children: [
+            // 1. Texto principal
             Padding(
               padding: const EdgeInsets.only(left: 24),
               child: Row(
-                children: [
-                  Text('I want to', style: TextStyle(fontSize: 24)),
+                children: const [
+                  Text('I want to ', style: TextStyle(fontSize: 24)),
                   Text(
                     'Eat',
                     style: TextStyle(
-                      //tamaño de letra
                       fontSize: 24,
-                      //Negritas
                       fontWeight: FontWeight.bold,
-                      //subrrayado
                       decoration: TextDecoration.underline,
                     ),
                   ),
                 ],
               ),
             ),
-            //2. Pestañas (TabBar)
+
+            const SizedBox(height: 12),
+
+            // 2. Pestañas (TabBar)
             TabBar(
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               tabs: myTabs,
             ),
 
-            //3. Contenido de pestañas (TabBarView)
+            // 3. Contenido de pestañas (TabBarView)
             Expanded(
               child: TabBarView(
                 children: [
@@ -86,7 +89,49 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            //4. Carrito (Cart)
+            // 4. Carrito (Cart)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          '2 items | \$45',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Delivery Charges Included',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pink[400],
+                    ),
+                    child: const Text(
+                      "View Cart",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
