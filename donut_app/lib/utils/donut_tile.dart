@@ -6,6 +6,7 @@ class DonutTile extends StatelessWidget {
   final dynamic donutColor;
   final String donutImagePath;
   final String donutProvider;
+  final VoidCallback? onAddToCart; // 1. Declaramos la función aquí
 
   const DonutTile({
     super.key,
@@ -14,6 +15,7 @@ class DonutTile extends StatelessWidget {
     this.donutColor,
     required this.donutImagePath,
     required this.donutProvider,
+    this.onAddToCart, // 2. Lo pedimos en el constructor
   });
 
   @override
@@ -27,9 +29,8 @@ class DonutTile extends StatelessWidget {
         ),
         child: Column(
           children: [
-            //Etiqueta de precio
+            // Etiqueta de precio
             Row(
-              //Alinear a la derecha
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Container(
@@ -39,7 +40,7 @@ class DonutTile extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: donutColor[200],
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(24),
                       bottomLeft: Radius.circular(24),
                     ),
@@ -55,34 +56,36 @@ class DonutTile extends StatelessWidget {
                 ),
               ],
             ),
-            //Imagen de la Dona
+            // Imagen
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               child: Image.asset(donutImagePath),
             ),
-            //Nombre de la Dona
+            // Nombre
             Text(
               donutFlavor,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-            //Espacio entre textos
             const SizedBox(height: 4),
-            //Nombredel proveedor
-            Text(donutProvider, style: TextStyle(color: Colors.grey[1600])),
-            //Espacio entre textos
-            //Iconos de fav y carrito
+            // Proveedor
+            Text(donutProvider, style: TextStyle(color: Colors.grey[700])),
+
+            // Botón Add interactivo
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Icon(Icons.favorite_border_outlined, color: Colors.pink[400]),
-                  Text(
-                    'Add',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      decoration: TextDecoration.underline,
+                  GestureDetector(
+                    onTap: onAddToCart, // 3. Conectamos el clic aquí
+                    child: const Text(
+                      'Add',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
                   ),
                 ],

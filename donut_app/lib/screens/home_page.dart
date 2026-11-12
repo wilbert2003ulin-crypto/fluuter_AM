@@ -1,10 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:donut_app/screens/cart_screen.dart';
 import 'package:donut_app/tab/burger_tab.dart';
 import 'package:donut_app/tab/donut_tab.dart';
 import 'package:donut_app/tab/pancake_tab.dart';
 import 'package:donut_app/tab/pizza_tab.dart';
 import 'package:donut_app/tab/smoothie_tab.dart';
 import 'package:donut_app/utils/my_tab.dart';
-import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,16 +15,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final List _cartItems = [];
+
+  void addToCart(String flavor, String price, String imagePath) {
+    setState(() {
+      _cartItems.add({'name': flavor, 'price': price, 'image': imagePath});
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$flavor añadido al carrito'),
+        duration: const Duration(milliseconds: 800),
+        backgroundColor: Colors.pink[400],
+      ),
+    );
+  }
+
+  double get totalPrice {
+    double total = 0;
+    for (var item in _cartItems) {
+      total += double.parse(item['price'].toString());
+    }
+    return total;
+  }
+
   final List<Widget> myTabs = [
-    // Donuts tab
     const MyTab(iconPath: 'assets/icons/donut.png', iconName: 'Donuts'),
-    // Burgers tab
     const MyTab(iconPath: 'assets/icons/burger.png', iconName: 'Burgers'),
-    // Smoothies tab
     const MyTab(iconPath: 'assets/icons/smoothie.png', iconName: 'Smoothies'),
-    // Pancakes tab
     const MyTab(iconPath: 'assets/icons/pancakes.png', iconName: 'Pancakes'),
-    // Pizzas tab
     const MyTab(iconPath: 'assets/icons/pizza.png', iconName: 'Pizzas'),
   ];
 
@@ -34,22 +54,20 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          // Para el icono de la izquierda
+          elevation: 0,
           leading: const Padding(
             padding: EdgeInsets.only(left: 24.0),
             child: Icon(Icons.menu, color: Colors.grey),
           ),
-          // Icono de la derecha
-          actions: [
+          actions: const [
             Padding(
-              padding: const EdgeInsets.only(right: 24.0),
+              padding: EdgeInsets.only(right: 24.0),
               child: Icon(Icons.person, color: Colors.grey),
             ),
           ],
         ),
         body: Column(
           children: [
-            // 1. Texto principal
             Padding(
               padding: const EdgeInsets.only(left: 24),
               child: Row(
@@ -66,30 +84,38 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // 2. Pestañas (TabBar)
             TabBar(
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               tabs: myTabs,
             ),
-
-            // 3. Contenido de pestañas (TabBarView)
             Expanded(
               child: TabBarView(
                 children: [
-                  DonutTab(),
-                  BurgerTab(),
-                  SmoothieTab(),
-                  PancakeTab(),
-                  PizzaTab(),
+                  DonutTab(
+                    onAddToCart: (flavor, price, image) =>
+                        addToCart(flavor, price, image),
+                  ),
+                  BurgerTab(
+                    onAddToCart: (flavor, price, image) =>
+                        addToCart(flavor, price, image),
+                  ),
+                  SmoothieTab(
+                    onAddToCart: (flavor, price, image) =>
+                        addToCart(flavor, price, image),
+                  ),
+                  PancakeTab(
+                    onAddToCart: (flavor, price, image) =>
+                        addToCart(flavor, price, image),
+                  ),
+                  PizzaTab(
+                    onAddToCart: (flavor, price, image) =>
+                        addToCart(flavor, price, image),
+                  ),
                 ],
               ),
             ),
-
-            // 4. Carrito (Cart)
             Container(
               color: Colors.white,
               padding: const EdgeInsets.all(16),
@@ -100,16 +126,16 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.only(left: 16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          '2 items | \$45',
-                          style: TextStyle(
+                          '${_cartItems.length} items | \$$totalPrice',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
+                        const SizedBox(height: 4),
+                        const Text(
                           'Delivery Charges Included',
                           style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
@@ -117,7 +143,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              CartScreen(cartItems: _cartItems),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.pink[400],
                     ),
