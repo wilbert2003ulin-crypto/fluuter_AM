@@ -6,7 +6,8 @@ class DonutTile extends StatelessWidget {
   final dynamic donutColor;
   final String donutImagePath;
   final String donutProvider;
-  final VoidCallback? onAddToCart; // 1. Declaramos la función aquí
+  final VoidCallback? onAddToCart;
+  final String fallbackAsset; // Imagen por defecto si no hay internet
 
   const DonutTile({
     super.key,
@@ -15,11 +16,15 @@ class DonutTile extends StatelessWidget {
     this.donutColor,
     required this.donutImagePath,
     required this.donutProvider,
-    this.onAddToCart, // 2. Lo pedimos en el constructor
+    this.onAddToCart,
+    this.fallbackAsset =
+        'assets/icons/donut.png', // Asegúrate de que exista en tus assets
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool isNetworkImage = donutImagePath.startsWith('http');
+
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Container(
@@ -56,10 +61,32 @@ class DonutTile extends StatelessWidget {
                 ),
               ],
             ),
-            // Imagen
+            // Imagen (desde Supabase con respaldo offline si es URL)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              child: Image.asset(donutImagePath),
+              child: isNetworkImage
+                  ? Image.network(
+                      donutImagePath,
+                      height: 85,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const SizedBox(
+                          height: 85,
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          fallbackAsset,
+                          height: 85,
+                          fit: BoxFit.contain,
+                        );
+                      },
+                    )
+                  : Image.asset(donutImagePath, height: 85),
             ),
             // Nombre
             Text(
@@ -78,7 +105,7 @@ class DonutTile extends StatelessWidget {
                 children: [
                   Icon(Icons.favorite_border_outlined, color: Colors.pink[400]),
                   GestureDetector(
-                    onTap: onAddToCart, // 3. Conectamos el clic aquí
+                    onTap: onAddToCart,
                     child: const Text(
                       'Add',
                       style: TextStyle(

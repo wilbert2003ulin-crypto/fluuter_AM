@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'dart:async';
 
-import 'package:donut_app/screens/home_page.dart'; // Importa tu pantalla principal
+import 'package:donut_app/screens/home_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,109 +15,220 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Variable para controlar la visibilidad de la contraseña
   bool _obscureText = true;
-
-  // Variable para el remember me (Solicitud de la actividad)
   bool _rememberMe = false;
-
-  // Bandera anti-spam para evitar múltiples clics rápidos en el botón de login
   bool _isLoading = false;
 
-  // Crear el cerebro de las animaciones
+  // Controladores de animaciones Rive
   StateMachineController? _controller;
   SMIBool? _isChecking;
   SMIBool? _isHandsUp;
   SMITrigger? _trigSuccess;
   SMITrigger? _trigFail;
-
-  // Variable para controlar el recorrido de la mirada del oso
   SMINumber? _numLook;
 
-  // Timer para detener la mirada al dejar de escribir
   Timer? _typingDebounce;
 
-  // Variables para focusNode
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  // Controllers para manipular el texto escrito por usuario
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // Errores para mostrar en la UI
   String? emailError;
   String? passwordError;
 
-  // Validadores para email y password
   bool validateEmail(String email) {
     final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return re.hasMatch(email);
   }
 
   bool validatePassword(String pass) {
-    // mínimo de 8, una mayúscula, una minúscula, un número y un carácter especial
     final re = RegExp(
       r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
     );
     return re.hasMatch(pass);
   }
 
-  // Acción del botón de login con control anti-spam y navegación
-  void _onLogin() async {
-    // Si ya está cargando o procesando, ignoramos clics repetidos (Anti-spam)
-    if (_isLoading) return;
+  bool _validarCampos(String email, String pass) {
+    final eError = validateEmail(email) ? null : 'Correo inválido';
+    final pError = validatePassword(pass)
+        ? null
+        : 'Mín. 8 caracteres, mayús., minús., número y símbolo';
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    // De lo que escribió el usuario, quita espacios en blanco
-    final email = emailController.text.trim();
-    final pass = passwordController.text;
-
-    // Recalcular los errores
-    final eError = validateEmail(email) ? null : 'Invalid email';
-    final pError = validatePassword(pass) ? null : 'Invalid password';
-
-    // Avisar si hubo un error
     setState(() {
       emailError = eError;
       passwordError = pError;
     });
 
-    // Cerrar el teclado y bajar las manos del oso
     FocusScope.of(context).unfocus();
     _typingDebounce?.cancel();
     _isChecking?.change(false);
     _isHandsUp?.change(false);
-    _numLook?.value = 50; // Mirada neutral
+    _numLook?.value = 50;
 
-    // Activar triggers y manejar navegación
-    if (eError == null && pError == null) {
+    return eError == null && pError == null;
+  }
+
+  // 1. INICIAR SESIÓN CON CORREO Y CONTRASEÑA
+  void _onLogin() async {
+    if (_isLoading) return;
+
+    final email = emailController.text.trim();
+    final pass = passwordController.text;
+
+    if (!_validarCampos(email, pass)) {
+      _trigFail?.fire();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
       _trigSuccess?.fire();
-
-      // Espera un momento para que se alcance a ver la animación de éxito del oso
       await Future.delayed(const Duration(milliseconds: 1200));
 
       if (mounted) {
-        // Redirige al catálogo de donas y elimina el login del historial
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
       }
-    } else {
+    } on FirebaseAuthException catch (e) {
       _trigFail?.fire();
+      String mensaje = 'Error al iniciar sesión';
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        mensaje = 'Correo no registrado o contraseña incorrecta.';
+      } else if (e.code == 'wrong-password') {
+        mensaje = 'Contraseña incorrecta.';
+      } else if (e.code == 'too-many-requests') {
+        mensaje = 'Demasiados intentos. Intenta más tarde.';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mensaje), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // 2. REGISTRAR NUEVO USUARIO CON CORREO
+  void _onRegister() async {
+    if (_isLoading) return;
+
+    final email = emailController.text.trim();
+    final pass = passwordController.text;
+
+    if (!_validarCampos(email, pass)) {
+      _trigFail?.fire();
+      return;
     }
 
-    // Pequeño retraso para liberar el botón (Anti-spam)
-    await Future.delayed(const Duration(seconds: 2));
+    setState(() => _isLoading = true);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
+      _trigSuccess?.fire();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Cuenta creada con éxito! Bienvenido.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      _trigFail?.fire();
+      String mensaje = 'Error al registrar usuario';
+      if (e.code == 'email-already-in-use') {
+        mensaje = 'Este correo ya está registrado. Presiona Login.';
+      } else if (e.code == 'weak-password') {
+        mensaje = 'La contraseña es muy débil.';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mensaje), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // 3. INICIAR SESIÓN CON GOOGLE
+  Future<void> _onGoogleSignIn() async {
+    if (_isLoading) return;
+
+    FocusScope.of(context).unfocus();
+    setState(() => _isLoading = true);
+
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        // El usuario cerró el selector de cuentas de Google
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      _trigSuccess?.fire();
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    } catch (e) {
+      _trigFail?.fire();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar con Google: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -263,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 10),
 
-              // Botón de Login condicionado con _isLoading (Anti-spam)
+              // Botón de Login tradicional
               MaterialButton(
                 minWidth: size.width,
                 height: 50,
@@ -278,8 +391,36 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
+              // Botón de Inicio de Sesión con Google
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: Size(size.width, 50),
+                  side: const BorderSide(color: Colors.grey),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isLoading ? null : _onGoogleSignIn,
+                icon: const Icon(
+                  Icons.g_mobiledata,
+                  size: 32,
+                  color: Colors.red,
+                ),
+                label: const Text(
+                  'Continuar con Google',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              // Botón de Register
               SizedBox(
                 width: size.width,
                 child: Row(
@@ -287,7 +428,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Text("Don't have an account? "),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: _isLoading ? null : _onRegister,
                       child: const Text(
                         "Register",
                         style: TextStyle(

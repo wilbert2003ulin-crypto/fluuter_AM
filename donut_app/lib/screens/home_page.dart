@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:donut_app/screens/cart_screen.dart';
+import 'package:donut_app/screens/firestore_notes_screen.dart';
 import 'package:donut_app/tab/burger_tab.dart';
 import 'package:donut_app/tab/donut_tab.dart';
 import 'package:donut_app/tab/pancake_tab.dart';
@@ -16,6 +19,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List _cartItems = [];
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  Future<void> _signOut() async {
+    try {
+      await GoogleSignIn().signOut();
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cerrar sesión: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
 
   void addToCart(String flavor, String price, String imagePath) {
     setState(() {
@@ -59,19 +79,35 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.only(left: 24.0),
             child: Icon(Icons.menu, color: Colors.grey),
           ),
-          actions: const [
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.person, color: Colors.grey),
+              tooltip: 'Notas en Firestore',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FirestoreNotesScreen(),
+                  ),
+                );
+              },
+            ),
             Padding(
-              padding: EdgeInsets.only(right: 24.0),
-              child: Icon(Icons.person, color: Colors.grey),
+              padding: const EdgeInsets.only(right: 16.0),
+              child: IconButton(
+                icon: const Icon(Icons.logout, color: Color(0xFFC21235)),
+                tooltip: 'Cerrar sesión',
+                onPressed: _signOut,
+              ),
             ),
           ],
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 24),
+            const Padding(
+              padding: EdgeInsets.only(left: 24),
               child: Row(
-                children: const [
+                children: [
                   Text('I want to ', style: TextStyle(fontSize: 24)),
                   Text(
                     'Eat',

@@ -6,33 +6,36 @@ class BurgerTab extends StatelessWidget {
 
   BurgerTab({super.key, this.onAddToCart});
 
+  static const String _supabaseStorageUrl =
+      'https://abvvllqgpqpbawkaqzlz.supabase.co/storage/v1/object/public/productos';
+
   final List burgersOnSale = [
     [
       'Pollo Crispy',
       '120',
       Colors.orange,
-      'assets/images/burger_pollo.png',
+      '$_supabaseStorageUrl/burger_pollo.png',
       'McDonalds',
     ],
     [
       'Doble Tocino',
       '145',
       Colors.brown,
-      'assets/images/burger_tocino.png',
+      '$_supabaseStorageUrl/burger_tocino.png',
       'Burger King',
     ],
     [
       'Burger Jr',
       '65',
       Colors.yellow,
-      'assets/images/burger_jr.png',
+      '$_supabaseStorageUrl/burger_jr.png',
       'Carl s Jr',
     ],
     [
       'Triple Carne',
       '180',
       Colors.red,
-      'assets/images/burger_triple.png',
+      '$_supabaseStorageUrl/burger_triple.png',
       'Wendy s',
     ],
   ];
@@ -53,6 +56,7 @@ class BurgerTab extends StatelessWidget {
           donutColor: burgersOnSale[index][2],
           donutImagePath: burgersOnSale[index][3],
           donutProvider: burgersOnSale[index][4],
+          fallbackAsset: 'assets/icons/burger.png',
           onAddToCart: () {
             if (onAddToCart != null) {
               onAddToCart!(

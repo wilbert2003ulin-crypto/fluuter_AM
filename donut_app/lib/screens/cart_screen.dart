@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:donut_app/utils/cloud_image.dart';
 
 class CartScreen extends StatefulWidget {
   final List cartItems;
@@ -13,7 +14,6 @@ class _CartScreenState extends State<CartScreen> {
   // Función para aumentar la cantidad de un producto en el carrito
   void _incrementItem(int index) {
     setState(() {
-      // Como guardamos objetos individuales, duplicamos el item para sumarlo al total y cantidad
       final item = widget.cartItems[index];
       widget.cartItems.add({
         'name': item['name'],
@@ -26,7 +26,6 @@ class _CartScreenState extends State<CartScreen> {
   // Función para disminuir/eliminar un producto del carrito
   void _decrementItem(String itemName) {
     setState(() {
-      // Buscamos y removemos una ocurrencia de ese producto
       final index = widget.cartItems.indexWhere(
         (item) => item['name'] == itemName,
       );
@@ -91,10 +90,10 @@ class _CartScreenState extends State<CartScreen> {
                     padding: const EdgeInsets.all(16),
                     itemBuilder: (context, index) {
                       final item = uniqueItemsList[index];
-                      // Encontramos el índice real en la lista general para modificarlo
                       final originalIndex = widget.cartItems.indexWhere(
                         (element) => element['name'] == item['name'],
                       );
+                      final String imagePath = item['image'].toString();
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
@@ -104,7 +103,7 @@ class _CartScreenState extends State<CartScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Colors.grey.withValues(alpha: 0.1),
                               spreadRadius: 2,
                               blurRadius: 5,
                               offset: const Offset(0, 3),
@@ -113,11 +112,18 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                         child: Row(
                           children: [
-                            // Imagen del producto
+                            // Imagen del producto (Nube con respaldo offline o Asset local)
                             SizedBox(
                               height: 60,
                               width: 60,
-                              child: Image.asset(item['image']),
+                              child: imagePath.startsWith('http')
+                                  ? CloudImage(
+                                      imageUrl: imagePath,
+                                      fallbackAsset: 'assets/icons/donut.png',
+                                      height: 60,
+                                      width: 60,
+                                    )
+                                  : Image.asset(imagePath),
                             ),
                             const SizedBox(width: 16),
                             // Descripción y precio unitario

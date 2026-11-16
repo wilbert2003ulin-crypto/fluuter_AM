@@ -6,33 +6,36 @@ class PancakeTab extends StatelessWidget {
 
   PancakeTab({super.key, this.onAddToCart});
 
+  static const String _supabaseStorageUrl =
+      'https://abvvllqgpqpbawkaqzlz.supabase.co/storage/v1/object/public/productos';
+
   final List pancakesOnSale = [
     [
       'Miel Exquisita',
       '85',
       Colors.amber,
-      'assets/images/pancake_miel.png',
+      '$_supabaseStorageUrl/pancake_miel.png',
       'IHOP',
     ],
     [
       'Mantequilla Extra',
       '75',
       Colors.orange,
-      'assets/images/pancake_mantequilla.png',
+      '$_supabaseStorageUrl/pancake_mantequilla.png',
       'Sanborns',
     ],
     [
       'Frutas del Bosque',
       '110',
       Colors.pink,
-      'assets/images/pancake_frutas.png',
+      '$_supabaseStorageUrl/pancake_frutas.png',
       'IHOP',
     ],
     [
       'Fresa Suprema',
       '95',
       Colors.red,
-      'assets/images/pancake_fresa.png',
+      '$_supabaseStorageUrl/pancake_fresa.png',
       'Vips',
     ],
   ];
@@ -53,6 +56,7 @@ class PancakeTab extends StatelessWidget {
           donutColor: pancakesOnSale[index][2],
           donutImagePath: pancakesOnSale[index][3],
           donutProvider: pancakesOnSale[index][4],
+          fallbackAsset: 'assets/icons/pancakes.png',
           onAddToCart: () {
             if (onAddToCart != null) {
               onAddToCart!(

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "739943086278",
+    "project_id": "donut-app-ecommerce",
+    "storage_bucket": "donut-app-ecommerce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:739943086278:android:70762865fbeb71a4ca3fc7",
+        "android_client_info": {
+          "package_name": "com.example.donut_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "739943086278-5d56u9hb40tj33vdgk749f0c1l6vioe7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.donut_app",
+            "certificate_hash": "b4244e70126d5b044c72e5b18087c8f1b235d840"
+          }
+        },
+        {
+          "client_id": "739943086278-7e25q569e944dhn0aum4kqq9qc6kuhhv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQh6muyJmj-O3_JR6_qb3J6xUdVtlBWoo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "739943086278-7e25q569e944dhn0aum4kqq9qc6kuhhv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "739943086278-m2oi5hjil2vdu0aj9srp9ome8oejjn8h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.donutApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

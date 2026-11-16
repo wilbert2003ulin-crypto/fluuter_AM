@@ -13,6 +13,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   # Agregamos la librería de Rive para que funcione la animación del oso
   rive: ^0.13.20
+  firebase_core: ^5.2.0
+  firebase_auth: ^7.1.0
+  google_sign_in: ^6.2.1
+  cloud_firestore: ^7.2.0
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:

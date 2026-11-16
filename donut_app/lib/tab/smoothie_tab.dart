@@ -6,33 +6,36 @@ class SmoothieTab extends StatelessWidget {
 
   SmoothieTab({super.key, this.onAddToCart});
 
+  static const String _supabaseStorageUrl =
+      'https://abvvllqgpqpbawkaqzlz.supabase.co/storage/v1/object/public/productos';
+
   final List smoothiesOnSale = [
     [
       'Naranja Fresca',
       '60',
       Colors.orange,
-      'assets/images/smoothie_naranja.png',
+      '$_supabaseStorageUrl/smoothie_naranja.png',
       'JugoBar',
     ],
     [
       'Blueberry Bomb',
       '85',
       Colors.blue,
-      'assets/images/smoothie_blueberry.png',
+      '$_supabaseStorageUrl/smoothie_blueberry.png',
       'Starbucks',
     ],
     [
       'Fresa Natural',
       '70',
       Colors.pink,
-      'assets/images/smoothie_fresa.png',
+      '$_supabaseStorageUrl/smoothie_fresa.png',
       'Oxxo',
     ],
     [
       'Mango Manía',
       '75',
       Colors.amber,
-      'assets/images/smoothie_mango.png',
+      '$_supabaseStorageUrl/smoothie_mango.png',
       'JugoBar',
     ],
   ];
@@ -53,6 +56,7 @@ class SmoothieTab extends StatelessWidget {
           donutColor: smoothiesOnSale[index][2],
           donutImagePath: smoothiesOnSale[index][3],
           donutProvider: smoothiesOnSale[index][4],
+          fallbackAsset: 'assets/icons/smoothie.png',
           onAddToCart: () {
             if (onAddToCart != null) {
               onAddToCart!(

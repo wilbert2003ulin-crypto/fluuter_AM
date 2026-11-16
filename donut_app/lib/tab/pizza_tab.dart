@@ -6,33 +6,36 @@ class PizzaTab extends StatelessWidget {
 
   PizzaTab({super.key, this.onAddToCart});
 
+  static const String _supabaseStorageUrl =
+      'https://abvvllqgpqpbawkaqzlz.supabase.co/storage/v1/object/public/productos';
+
   final List pizzasOnSale = [
     [
       'Carne Carnívora',
       '160',
       Colors.red,
-      'assets/images/pizza_carne.png',
+      '$_supabaseStorageUrl/pizza_carne.png',
       'Domino s',
     ],
     [
       'Mexicana Picante',
       '150',
       Colors.green,
-      'assets/images/pizza_mexicana.png',
+      '$_supabaseStorageUrl/pizza_mexicana.png',
       'Pizza Hut',
     ],
     [
       'Hawaiana',
       '135',
       Colors.amber,
-      'assets/images/pizza_hawaiana.png',
+      '$_supabaseStorageUrl/pizza_hawaiana.png',
       'Dominos',
     ],
     [
       'Pepperoni Clásica',
       '130',
       Colors.deepOrange,
-      'assets/images/pizza_peperoni.png',
+      '$_supabaseStorageUrl/pizza_peperoni.png',
       'Little Caesars',
     ],
   ];
@@ -53,6 +56,7 @@ class PizzaTab extends StatelessWidget {
           donutColor: pizzasOnSale[index][2],
           donutImagePath: pizzasOnSale[index][3],
           donutProvider: pizzasOnSale[index][4],
+          fallbackAsset: 'assets/icons/pizza.png',
           onAddToCart: () {
             if (onAddToCart != null) {
               onAddToCart!(
