@@ -50,7 +50,7 @@ class LoginFooter extends StatelessWidget {
         ),
         const SizedBox(height: 36),
         Text(
-          "YEYPE'S Natura · Versión 2.4",
+          "NATURA FLEULIN · Versión 2.4",
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white.withValues(alpha: 0.55),
             fontSize: 11,
