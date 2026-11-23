@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../sales/presentation/screens/new_contract_screen.dart';
 import '../widgets/home_top_section.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -99,13 +100,20 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
 
-      // Botón central flotante "+ Venta"
+      // Botón central flotante "+ Venta" conectado
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
         width: 58,
         height: 58,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NewContractScreen(),
+              ),
+            );
+          },
           backgroundColor: AppColors.primaryGreen,
           elevation: 4,
           shape: const CircleBorder(),
@@ -122,12 +130,12 @@ class HomeScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _NavItem(
+            const _NavItem(
               icon: Icons.home_outlined,
               label: 'Inicio',
               isActive: true,
             ),
-            _NavItem(
+            const _NavItem(
               icon: Icons.people_outline_rounded,
               label: 'Clientes',
               isActive: false,
@@ -143,12 +151,16 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _NavItem(
+            const _NavItem(
               icon: Icons.alt_route_rounded,
               label: 'Ruta',
               isActive: false,
             ),
-            _NavItem(icon: Icons.menu_rounded, label: 'Más', isActive: false),
+            const _NavItem(
+              icon: Icons.menu_rounded,
+              label: 'Más',
+              isActive: false,
+            ),
           ],
         ),
       ),
