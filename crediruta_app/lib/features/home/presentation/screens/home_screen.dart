@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../clients/presentation/screens/clients_screen.dart';
 import '../../../sales/presentation/screens/new_contract_screen.dart';
 import '../widgets/home_top_section.dart';
 
@@ -135,10 +136,20 @@ class HomeScreen extends StatelessWidget {
               label: 'Inicio',
               isActive: true,
             ),
-            const _NavItem(
-              icon: Icons.people_outline_rounded,
-              label: 'Clientes',
-              isActive: false,
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ClientsScreen(),
+                  ),
+                );
+              },
+              child: const _NavItem(
+                icon: Icons.people_outline_rounded,
+                label: 'Clientes',
+                isActive: false,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 28),
