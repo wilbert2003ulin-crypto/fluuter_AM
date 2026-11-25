@@ -161,7 +161,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Badge "3 por subir"
+                      // Badge dinámico de contratos pendientes por sincronizar
                       Align(
                         alignment: Alignment.centerRight,
                         child: Container(
@@ -184,7 +184,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '3 por subir',
+                                '${allClients.length} por subir',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: const Color(0xFFB45309),
                                   fontSize: 11,
@@ -318,24 +318,79 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
                 ),
 
-                // 3. Lista de tarjetas de clientes
+                // 3. Lista de tarjetas de clientes o estado vacío
                 Expanded(
                   child: Stack(
                     children: [
-                      ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 120),
-                        itemCount: filteredClients.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final client = filteredClients[index];
-                          return _ClientCard(
-                            client: client,
-                            formattedBalance: _formatCurrency(
-                              client.creditBalance,
+                      filteredClients.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 64,
+                                      height: 64,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE6F4EE),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Icon(
+                                        Icons.person_add_alt_1_rounded,
+                                        size: 30,
+                                        color: AppColors.primaryGreen,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    Text(
+                                      allClients.isEmpty
+                                          ? 'Aún no hay contratos registrados'
+                                          : 'Sin resultados para este filtro',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: AppColors.textDark,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      allClients.isEmpty
+                                          ? 'Presiona "+ Nuevo contrato" para registrar tu primera venta y generar la tarjeta del cliente.'
+                                          : 'Intenta buscar por otro nombre, pueblo o cambia el filtro superior.',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: AppColors.textMuted,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                4,
+                                20,
+                                120,
+                              ),
+                              itemCount: filteredClients.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final client = filteredClients[index];
+                                return _ClientCard(
+                                  client: client,
+                                  formattedBalance: _formatCurrency(
+                                    client.creditBalance,
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
 
                       // Botón flotante "+ Nuevo contrato" en la esquina inferior derecha
                       Positioned(

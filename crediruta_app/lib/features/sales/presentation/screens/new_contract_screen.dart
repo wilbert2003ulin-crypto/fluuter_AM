@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../clients/data/mock_clients_store.dart';
+import '../../../clients/presentation/screens/clients_screen.dart';
 import '../widgets/signature_pad_card.dart';
 
 class NewContractScreen extends StatefulWidget {
@@ -914,15 +916,64 @@ class _NewContractScreenState extends State<NewContractScreen> {
                       height: 56,
                       child: ElevatedButton.icon(
                         onPressed: () {
+                          final clientName = _nameController.text.trim();
+                          if (clientName.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Por favor ingresa el nombre completo del cliente.',
+                                ),
+                                backgroundColor: Color(0xFFB91C1C),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final now = DateTime.now();
+                          final nextPayment = now.add(
+                            Duration(days: _isWeekly ? 7 : 15),
+                          );
+
+                          MockClientsStore.addClient(
+                            ClientContract(
+                              name: clientName,
+                              town: _selectedTown,
+                              colony: _colonyController.text.trim(),
+                              reference: _referenceController.text.trim(),
+                              routeName: routeInfo['ruta']!,
+                              collectionDays: routeInfo['dias']!,
+                              phone: _phoneController.text.trim(),
+                              productName: currentProduct['name'] as String,
+                              quantity: _quantity,
+                              totalSale: totalSale,
+                              downPayment: downPayment,
+                              creditBalance: creditBalance,
+                              installmentsCount: _installmentsCount,
+                              installmentAmount: installmentAmount,
+                              isWeekly: _isWeekly,
+                              createdAt: now,
+                              nextPaymentDate: nextPayment,
+                              avatarBg: const Color(0xFFE6F4EE),
+                              avatarText: AppColors.primaryGreen,
+                            ),
+                          );
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Vista previa: contrato de ${_nameController.text.isEmpty ? "cliente" : _nameController.text} (${routeInfo['ruta']}) listo.',
+                                'Contrato guardado: $clientName asignado a ${routeInfo['ruta']}',
                               ),
                               backgroundColor: AppColors.primaryGreen,
                             ),
                           );
-                          Navigator.pop(context);
+
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ClientsScreen(),
+                            ),
+                            (route) => false,
+                          );
                         },
                         icon: const Icon(Icons.cloud_off_rounded, size: 20),
                         label: Text(
