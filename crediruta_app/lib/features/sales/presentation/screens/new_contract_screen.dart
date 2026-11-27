@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../clients/data/contracts_firestore_service.dart';
 import '../../../clients/data/mock_clients_store.dart';
 import '../../../clients/presentation/screens/clients_screen.dart';
 import '../widgets/signature_pad_card.dart';
@@ -59,6 +60,7 @@ class _NewContractScreenState extends State<NewContractScreen> {
   int _installmentsCount = 8;
   final _downPaymentController = TextEditingController(text: '144');
   bool _customDownPayment = false;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -161,7 +163,7 @@ class _NewContractScreenState extends State<NewContractScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Badge "Guardado local"
+                  // Badge "Cloud Firestore"
                   Align(
                     alignment: Alignment.centerRight,
                     child: Container(
@@ -170,23 +172,25 @@ class _NewContractScreenState extends State<NewContractScreen> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3E7),
+                        color: const Color(0xFFE6F4EE),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFFDE2C4)),
+                        border: Border.all(
+                          color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.cloud_off_rounded,
+                            Icons.cloud_done_outlined,
                             size: 13,
-                            color: Color(0xFFD97706),
+                            color: AppColors.primaryGreen,
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            'Guardado local',
+                            'Cloud Firestore',
                             style: GoogleFonts.plusJakartaSans(
-                              color: const Color(0xFFB45309),
+                              color: AppColors.primaryGreen,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -910,74 +914,106 @@ class _NewContractScreenState extends State<NewContractScreen> {
                     const SignaturePadCard(),
                     const SizedBox(height: 24),
 
-                    // Botón final Guardar contrato offline
+                    // Botón final Guardar contrato en Firestore
                     SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          final clientName = _nameController.text.trim();
-                          if (clientName.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Por favor ingresa el nombre completo del cliente.',
+                        onPressed: _isSaving
+                            ? null
+                            : () async {
+                                final clientName = _nameController.text.trim();
+                                if (clientName.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Por favor ingresa el nombre completo del cliente.',
+                                      ),
+                                      backgroundColor: Color(0xFFB91C1C),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setState(() => _isSaving = true);
+
+                                final now = DateTime.now();
+                                final nextPayment = now.add(
+                                  Duration(days: _isWeekly ? 7 : 15),
+                                );
+
+                                final newContract = ClientContract(
+                                  name: clientName,
+                                  town: _selectedTown,
+                                  colony: _colonyController.text.trim(),
+                                  reference: _referenceController.text.trim(),
+                                  routeName: routeInfo['ruta']!,
+                                  collectionDays: routeInfo['dias']!,
+                                  phone: _phoneController.text.trim(),
+                                  productName: currentProduct['name'] as String,
+                                  quantity: _quantity,
+                                  totalSale: totalSale,
+                                  downPayment: downPayment,
+                                  creditBalance: creditBalance,
+                                  installmentsCount: _installmentsCount,
+                                  installmentAmount: installmentAmount,
+                                  isWeekly: _isWeekly,
+                                  createdAt: now,
+                                  nextPaymentDate: nextPayment,
+                                  avatarBg: const Color(0xFFE6F4EE),
+                                  avatarText: AppColors.primaryGreen,
+                                );
+
+                                try {
+                                  await ContractsFirestoreService.createContract(
+                                    newContract,
+                                  );
+
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Contrato guardado en Firestore: $clientName (${routeInfo['ruta']})',
+                                      ),
+                                      backgroundColor: AppColors.primaryGreen,
+                                    ),
+                                  );
+
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ClientsScreen(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                } catch (e) {
+                                  if (!context.mounted) return;
+                                  setState(() => _isSaving = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error al guardar en Firestore: $e',
+                                      ),
+                                      backgroundColor: const Color(0xFFB91C1C),
+                                    ),
+                                  );
+                                }
+                              },
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.2,
                                 ),
-                                backgroundColor: Color(0xFFB91C1C),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final now = DateTime.now();
-                          final nextPayment = now.add(
-                            Duration(days: _isWeekly ? 7 : 15),
-                          );
-
-                          MockClientsStore.addClient(
-                            ClientContract(
-                              name: clientName,
-                              town: _selectedTown,
-                              colony: _colonyController.text.trim(),
-                              reference: _referenceController.text.trim(),
-                              routeName: routeInfo['ruta']!,
-                              collectionDays: routeInfo['dias']!,
-                              phone: _phoneController.text.trim(),
-                              productName: currentProduct['name'] as String,
-                              quantity: _quantity,
-                              totalSale: totalSale,
-                              downPayment: downPayment,
-                              creditBalance: creditBalance,
-                              installmentsCount: _installmentsCount,
-                              installmentAmount: installmentAmount,
-                              isWeekly: _isWeekly,
-                              createdAt: now,
-                              nextPaymentDate: nextPayment,
-                              avatarBg: const Color(0xFFE6F4EE),
-                              avatarText: AppColors.primaryGreen,
-                            ),
-                          );
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Contrato guardado: $clientName asignado a ${routeInfo['ruta']}',
-                              ),
-                              backgroundColor: AppColors.primaryGreen,
-                            ),
-                          );
-
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ClientsScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                        icon: const Icon(Icons.cloud_off_rounded, size: 20),
+                              )
+                            : const Icon(Icons.cloud_upload_rounded, size: 20),
                         label: Text(
-                          'Guardar contrato offline',
+                          _isSaving
+                              ? 'Guardando contrato...'
+                              : 'Guardar contrato',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

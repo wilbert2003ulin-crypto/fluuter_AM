@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../sales/presentation/screens/new_contract_screen.dart';
+import '../../data/contracts_firestore_service.dart';
 import '../../data/mock_clients_store.dart';
 
 class ClientsScreen extends StatefulWidget {
@@ -37,9 +38,40 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<ClientContract>>(
-      valueListenable: MockClientsStore.clientsNotifier,
-      builder: (context, allClients, _) {
+    return StreamBuilder<List<ClientContract>>(
+      stream: ContractsFirestoreService.watchContracts(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF9FAFB),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primaryGreen),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF9FAFB),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Error al cargar contratos desde Firestore:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFFB91C1C),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final allClients = snapshot.data ?? [];
         final query = _searchController.text.toLowerCase().trim();
         final overdueCount = allClients
             .where((c) => c.statusType == 'overdue')
@@ -161,7 +193,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Badge dinámico de contratos pendientes por sincronizar
+                      // Badge de conexión en vivo con Cloud Firestore
                       Align(
                         alignment: Alignment.centerRight,
                         child: Container(
@@ -170,23 +202,27 @@ class _ClientsScreenState extends State<ClientsScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3E7),
+                            color: const Color(0xFFE6F4EE),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFFDE2C4)),
+                            border: Border.all(
+                              color: AppColors.primaryGreen.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.cloud_off_rounded,
+                                Icons.cloud_done_rounded,
                                 size: 14,
-                                color: Color(0xFFD97706),
+                                color: AppColors.primaryGreen,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '${allClients.length} por subir',
+                                'Sincronizado en vivo',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: const Color(0xFFB45309),
+                                  color: AppColors.primaryGreen,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -359,7 +395,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                     const SizedBox(height: 6),
                                     Text(
                                       allClients.isEmpty
-                                          ? 'Presiona "+ Nuevo contrato" para registrar tu primera venta y generar la tarjeta del cliente.'
+                                          ? 'Presiona "+ Nuevo contrato" para registrar tu primera venta en Cloud Firestore.'
                                           : 'Intenta buscar por otro nombre, pueblo o cambia el filtro superior.',
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.plusJakartaSans(

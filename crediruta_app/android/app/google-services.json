@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1016737058462",
+    "project_id": "natura-fleulin",
+    "storage_bucket": "natura-fleulin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1016737058462:android:8a2a011c7984fab07cb58f",
+        "android_client_info": {
+          "package_name": "com.example.crediruta_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCam_8bGwHK3OczkQICUetCLDHATI0m-i0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
